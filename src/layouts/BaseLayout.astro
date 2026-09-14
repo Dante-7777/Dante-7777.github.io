@@ -1,5 +1,6 @@
 ---
 import Header from '../components/Header.astro';
+import SakuraFall from '../components/SakuraFall.astro';
 import { site } from '../config';
 import '../styles/global.css';
 interface Props { title?: string; description?: string }
@@ -29,6 +30,7 @@ const pageTitle = title ? `${title} · ${site.title}` : site.title;
   </head>
   <body>
     <a class="skip-link" href="#content">跳到正文</a>
+    <SakuraFall />
     <div class="site-shell">
       <Header />
       <main id="content"><slot /></main>

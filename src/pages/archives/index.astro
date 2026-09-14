@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { dateText, postSlug, visiblePosts } from '../../lib/posts';
+const posts = visiblePosts(await getCollection('posts'));
+const years = [...new Set(posts.map((post) => post.data.publishedAt.getFullYear()))];
+---
+<BaseLayout title="归档">
+  <header class="page-heading"><p class="eyebrow">ARCHIVES</p><h1>归档</h1><p>{years.length} 个年份，{posts.length} 篇文章。</p></header>
+  <div class="archive-list">
+    {years.map((year) => (
+      <section>
+        <h2>{year}</h2>
+        <div>{posts.filter((post) => post.data.publishedAt.getFullYear() === year).map((post) => (
+          <a href={`/writing/${postSlug(post.id)}/`}><time>{dateText(post.data.publishedAt).slice(5)}</time><strong>{post.data.title}</strong><span>{post.data.category}</span></a>
+        ))}</div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

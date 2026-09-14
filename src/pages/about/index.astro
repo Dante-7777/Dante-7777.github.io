@@ -3,10 +3,16 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 <BaseLayout title="关于">
   <header class="page-heading"><p class="eyebrow">ABOUT</p><h1>关于</h1></header>
-  <div class="about-copy">
-    <p class="lead">你好，我是 Akatsuki。</p>
-    <p>这是我的个人写作空间。这里将用来记录技术、阅读、项目复盘与生活观察。</p>
-    <p>网站目前仍在搭建中。身份介绍、社交链接和更完整的个人经历会在下一阶段补充。</p>
-    <div class="about-links"><a href="https://github.com/dante-7777">GitHub ↗</a><a href="/rss.xml">订阅 RSS ↗</a></div>
+  <div class="about-grid">
+    <div class="about-copy">
+      <p class="lead">你好，我是 Akatsuki。</p>
+      <p>这里是我的个人写作空间，用来安放技术实践、阅读所得，以及日常生活中值得留存的片刻。</p>
+      <p>比起快速更新，我更希望把真正理解过的事情慢慢写清楚。</p>
+      <div class="about-links"><a href="https://github.com/dante-7777">GitHub ↗</a><a href="/rss.xml">订阅 RSS ↗</a></div>
+    </div>
+    <aside class="about-aside" aria-label="写作方向">
+      <p>所记三事</p>
+      <ol><li><span>壹</span>技术笔记</li><li><span>贰</span>阅读札记</li><li><span>叁</span>日常观察</li></ol>
+    </aside>
   </div>
 </BaseLayout>

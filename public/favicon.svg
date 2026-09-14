@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#b75b72"/>
-  <path d="M17 47 28 16h8l11 31h-8l-2-7H27l-2 7h-8Zm12-14h6l-3-10-3 10Z" fill="#fff8f4"/>
-  <path d="M14 11h36v42H14z" fill="none" stroke="#e8bdc7" stroke-width="2"/>
+  <rect x="2" y="2" width="60" height="60" rx="7" fill="#b75b72" stroke="#884454" stroke-width="2"/>
+  <path d="M10 9.5h44.5v45H9.5v-44" fill="none" stroke="#f8e9e3" stroke-width="2" opacity=".72"/>
+  <text x="32" y="44" fill="#fff8f4" font-family="Noto Serif JP, Yu Mincho, Hiragino Mincho ProN, serif" font-size="37" font-weight="700" text-anchor="middle">暁</text>
 </svg>

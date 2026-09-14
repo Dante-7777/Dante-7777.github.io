@@ -1,5 +1,5 @@
 ---
-import { dateText, postSlug } from '../lib/posts';
+import { dateText, postSlug, taxonomyPath } from '../lib/posts';
 import type { CollectionEntry } from 'astro:content';
 interface Props { posts: CollectionEntry<'posts'>[] }
 const { posts } = Astro.props;
@@ -11,7 +11,10 @@ const { posts } = Astro.props;
       <div>
         <h2><a href={`/writing/${postSlug(post.id)}/`}>{post.data.title}</a></h2>
         <p>{post.data.description}</p>
-        <span>{post.data.category} · {post.data.tags.join(' / ')}</span>
+        <nav class="post-taxonomy" aria-label={`${post.data.title}的分类与标签`}>
+          <a href={taxonomyPath('categories', post.data.category)}>{post.data.category}</a>
+          {post.data.tags.map((tag) => <a href={taxonomyPath('tags', tag)}>#{tag}</a>)}
+        </nav>
       </div>
     </article>
   ))}

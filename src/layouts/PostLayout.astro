@@ -1,18 +1,38 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import { dateText } from '../lib/posts';
+import TableOfContents from '../components/TableOfContents.astro';
+import ArticleEnhancements from '../components/ArticleEnhancements.astro';
+import { dateText, postSlug, readingMinutes, taxonomyPath } from '../lib/posts';
 import type { CollectionEntry } from 'astro:content';
-interface Props { post: CollectionEntry<'posts'> }
-const { post } = Astro.props;
+interface Heading { depth: number; slug: string; text: string }
+interface Props { post: CollectionEntry<'posts'>; headings: Heading[]; newer?: CollectionEntry<'posts'>; older?: CollectionEntry<'posts'> }
+const { post, headings, newer, older } = Astro.props;
+const minutes = readingMinutes(post.body);
 ---
 <BaseLayout title={post.data.title} description={post.data.description}>
   <article class="article">
     <header class="article-header">
-      <div class="article-meta"><span>{post.data.category}</span><time>{dateText(post.data.publishedAt)}</time></div>
+      <div class="article-meta">
+        <a href={taxonomyPath('categories', post.data.category)}>{post.data.category}</a>
+        <time datetime={post.data.publishedAt.toISOString()}>{dateText(post.data.publishedAt)}</time>
+        {post.data.updatedAt && <span>修订于 {dateText(post.data.updatedAt)}</span>}
+        <span>约 {minutes} 分钟</span>
+      </div>
       <h1>{post.data.title}</h1>
       <p>{post.data.description}</p>
+      <nav class="article-tags" aria-label="文章标签">
+        {post.data.tags.map((tag) => <a href={taxonomyPath('tags', tag)}>#{tag}</a>)}
+      </nav>
     </header>
-    <div class="prose"><slot /></div>
+    <div class="article-reading">
+      <TableOfContents headings={headings} />
+      <div class="prose"><slot /></div>
+    </div>
+    <nav class="article-navigation" aria-label="继续阅读">
+      {newer ? <a href={`/writing/${postSlug(newer.id)}/`}><span>上一篇</span><strong>{newer.data.title}</strong></a> : <span></span>}
+      {older ? <a class="next" href={`/writing/${postSlug(older.id)}/`}><span>下一篇</span><strong>{older.data.title}</strong></a> : <span></span>}
+    </nav>
     <footer class="article-end"><span>— 完 —</span><a href="/writing/">返回全部文章</a></footer>
   </article>
+  <ArticleEnhancements />
 </BaseLayout>

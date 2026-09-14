@@ -1,0 +1,47 @@
+---
+const trackUrl = 'https://music.163.com/song/media/outer/url?id=2155972622.mp3';
+---
+
+<div class="music-float" data-music-player>
+  <span class="music-tooltip" data-music-tooltip>播放音乐</span>
+  <button class="music-disc" type="button" aria-label="播放音乐：舔狗，连麻Swimming" aria-pressed="false" data-music-toggle>
+    <span aria-hidden="true">♪</span>
+  </button>
+  <audio src={trackUrl} preload="none" data-music-audio></audio>
+  <p class="sr-only" aria-live="polite" data-music-status></p>
+</div>
+
+<script>
+  const player = document.querySelector<HTMLElement>('[data-music-player]');
+  const toggle = player?.querySelector<HTMLButtonElement>('[data-music-toggle]');
+  const audio = player?.querySelector<HTMLAudioElement>('[data-music-audio]');
+  const tooltip = player?.querySelector<HTMLElement>('[data-music-tooltip]');
+  const status = player?.querySelector<HTMLElement>('[data-music-status]');
+
+  const setPlaying = (playing: boolean) => {
+    player?.classList.toggle('is-playing', playing);
+    toggle?.setAttribute('aria-pressed', String(playing));
+    toggle?.setAttribute('aria-label', `${playing ? '暂停' : '播放'}音乐：舔狗，连麻Swimming`);
+    if (tooltip) tooltip.textContent = playing ? '暂停 · 舔狗' : '播放音乐';
+    if (status) status.textContent = playing ? '正在播放：舔狗，连麻Swimming' : '音乐已暂停';
+  };
+
+  toggle?.addEventListener('click', async () => {
+    if (!audio) return;
+    if (audio.paused) {
+      try {
+        await audio.play();
+        setPlaying(true);
+      } catch {
+        if (status) status.textContent = '暂时无法播放，请稍后重试';
+        if (tooltip) tooltip.textContent = '暂时无法播放';
+      }
+    } else {
+      audio.pause();
+      setPlaying(false);
+    }
+  });
+
+  audio?.addEventListener('ended', () => setPlaying(false));
+  audio?.addEventListener('pause', () => setPlaying(false));
+</script>

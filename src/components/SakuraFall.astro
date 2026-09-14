@@ -1,0 +1,28 @@
+---
+const petals = [
+  { left: '4%', size: '22px', duration: '15s', delay: '-3s', drift: '72px' },
+  { left: '12%', size: '18px', duration: '17s', delay: '-12s', drift: '-52px' },
+  { left: '22%', size: '27px', duration: '19s', delay: '-7s', drift: '94px' },
+  { left: '31%', size: '20px', duration: '14s', delay: '-10s', drift: '-66px' },
+  { left: '40%', size: '24px', duration: '18s', delay: '-15s', drift: '80px' },
+  { left: '50%', size: '17px', duration: '16s', delay: '-5s', drift: '-48px' },
+  { left: '59%', size: '28px', duration: '20s', delay: '-17s', drift: '68px' },
+  { left: '68%', size: '21px', duration: '15s', delay: '-9s', drift: '-84px' },
+  { left: '76%', size: '25px', duration: '18s', delay: '-2s', drift: '56px' },
+  { left: '84%', size: '18px', duration: '14s', delay: '-13s', drift: '-60px' },
+  { left: '91%', size: '23px', duration: '17s', delay: '-6s', drift: '76px' },
+  { left: '97%', size: '20px', duration: '19s', delay: '-16s', drift: '-44px' },
+];
+---
+<div class="sakura-fall" aria-hidden="true">
+  {petals.map((petal, index) => (
+    <img
+      src="/assets/sakura-petal.png"
+      alt=""
+      width="128"
+      height="128"
+      loading="eager"
+      style={`--petal-left:${petal.left};--petal-size:${petal.size};--petal-duration:${petal.duration};--petal-delay:${petal.delay};--petal-drift:${petal.drift};--petal-turn:${index % 2 ? '-540deg' : '620deg'}`}
+    />
+  ))}
+</div>

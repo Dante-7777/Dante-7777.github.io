@@ -1,0 +1,15 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import { visiblePosts } from '../../lib/posts';
+export async function getStaticPaths() {
+  const posts = visiblePosts(await getCollection('posts'));
+  return [...new Set(posts.flatMap((post) => post.data.tags))].map((tag) => ({ params: { tag }, props: { tag, posts: posts.filter((post) => post.data.tags.includes(tag)) } }));
+}
+const { tag, posts } = Astro.props;
+---
+<BaseLayout title={`#${tag}`}>
+  <header class="page-heading"><p class="eyebrow">TAG</p><h1>#{tag}</h1><p>含此标签的文章共 {posts.length} 篇。</p></header>
+  <PostList posts={posts} />
+</BaseLayout>
