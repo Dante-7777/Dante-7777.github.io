@@ -1,0 +1,11 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
+import { visiblePosts } from '../../lib/posts';
+const posts = visiblePosts(await getCollection('posts'));
+---
+<BaseLayout title="文章">
+  <header class="page-heading"><p class="eyebrow">WRITING</p><h1>文章</h1><p>共 {posts.length} 篇，按发布时间倒序排列。</p></header>
+  <PostList posts={posts} />
+</BaseLayout>

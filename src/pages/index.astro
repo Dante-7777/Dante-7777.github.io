@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostList from '../components/PostList.astro';
+import { visiblePosts } from '../lib/posts';
+const posts = visiblePosts(await getCollection('posts'));
+---
+<BaseLayout>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">AKATSUKI · 文字录</p>
+      <h1>晓色入纸，<br />闲记所思。</h1>
+      <p class="hero-copy">记录技术实践、阅读思考，以及值得被写下来的寻常片刻。</p>
+    </div>
+    <aside class="year-mark" aria-hidden="true"><strong>{new Date().getFullYear()}</strong><i></i><span>岁次 · 丙午</span></aside>
+  </section>
+  <section class="home-block">
+    <header class="section-title"><h2>最近写作</h2><a href="/writing/">查看全部</a></header>
+    <PostList posts={posts.slice(0, 5)} />
+  </section>
+  <section class="home-block statement">
+    <p>且将新火试新茶，诗酒趁年华。</p>
+    <a href="/about/">更多关于我 →</a>
+  </section>
+</BaseLayout>

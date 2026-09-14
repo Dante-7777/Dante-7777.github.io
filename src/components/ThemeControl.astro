@@ -1,0 +1,33 @@
+<details class="theme-control">
+  <summary aria-label="切换显示主题">主题</summary>
+  <div class="theme-menu">
+    <button type="button" data-theme-choice="auto">跟随系统</button>
+    <button type="button" data-theme-choice="light">浅色</button>
+    <button type="button" data-theme-choice="dark">深色</button>
+  </div>
+</details>
+
+<script is:inline>
+  const control = document.querySelector('.theme-control');
+  const buttons = document.querySelectorAll('[data-theme-choice]');
+  const update = (choice) => {
+    const actual = choice === 'auto'
+      ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      : choice;
+    document.documentElement.dataset.themeChoice = choice;
+    document.documentElement.dataset.theme = actual;
+    localStorage.setItem('akatsuki-theme', choice);
+    buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === choice)));
+  };
+  buttons.forEach((button) => button.addEventListener('click', () => {
+    update(button.dataset.themeChoice || 'auto');
+    control?.removeAttribute('open');
+  }));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (document.documentElement.dataset.themeChoice === 'auto') update('auto');
+  });
+  document.addEventListener('click', (event) => {
+    if (control?.open && !control.contains(event.target)) control.removeAttribute('open');
+  });
+  update(localStorage.getItem('akatsuki-theme') || 'light');
+</script>

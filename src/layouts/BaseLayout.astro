@@ -1,0 +1,38 @@
+---
+import Header from '../components/Header.astro';
+import { site } from '../config';
+import '../styles/global.css';
+interface Props { title?: string; description?: string }
+const { title, description = site.description } = Astro.props;
+const pageTitle = title ? `${title} · ${site.title}` : site.title;
+---
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#f8f3ef" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="application/rss+xml" title={site.title} href="/rss.xml" />
+    <link rel="canonical" href={Astro.url} />
+    <title>{pageTitle}</title>
+    <script is:inline>
+      (() => {
+        const choice = localStorage.getItem('akatsuki-theme') || 'light';
+        const theme = choice === 'auto' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : choice;
+        document.documentElement.dataset.themeChoice = choice;
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">跳到正文</a>
+    <div class="site-shell">
+      <Header />
+      <main id="content"><slot /></main>
+      <footer><span>© {new Date().getFullYear()} {site.author}</span><div><a href={site.github}>GitHub</a><a href="/rss.xml">RSS</a></div></footer>
+    </div>
+  </body>
+</html>

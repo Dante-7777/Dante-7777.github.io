@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { dateText, postSlug, visiblePosts } from '../../lib/posts';
+const posts = visiblePosts(await getCollection('posts')).map((post) => ({ title: post.data.title, description: post.data.description, category: post.data.category, tags: post.data.tags, date: dateText(post.data.publishedAt), url: `/writing/${postSlug(post.id)}/` }));
+---
+<BaseLayout title="搜索">
+  <header class="page-heading"><p class="eyebrow">SEARCH</p><h1>搜索</h1></header>
+  <label class="search-field"><span class="sr-only">搜索文章</span><input id="search" type="search" placeholder="输入标题、分类或关键词…" autocomplete="off" /></label>
+  <p id="search-status" class="search-status"></p>
+  <div id="results" class="search-results"></div>
+  <script is:inline type="application/json" id="search-data" set:html={JSON.stringify(posts).replace(/</g, '\\u003c')} />
+</BaseLayout>
+<script>
+  interface SearchItem { title: string; description: string; category: string; tags: string[]; date: string; url: string }
+  const data: SearchItem[] = JSON.parse(document.querySelector('#search-data')?.textContent || '[]');
+  const input = document.querySelector<HTMLInputElement>('#search');
+  const results = document.querySelector('#results');
+  const status = document.querySelector('#search-status');
+  const render = () => {
+    const query = input?.value.trim().toLocaleLowerCase() || '';
+    const matches = query ? data.filter((item) => `${item.title} ${item.description} ${item.category} ${item.tags.join(' ')}`.toLocaleLowerCase().includes(query)) : data;
+    if (status) status.textContent = query ? `找到 ${matches.length} 篇文章` : `全部 ${matches.length} 篇文章`;
+    if (!results) return;
+    if (!matches.length) {
+      const empty = document.createElement('p');
+      empty.className = 'empty';
+      empty.textContent = '没有匹配结果。';
+      results.replaceChildren(empty);
+      return;
+    }
+    results.replaceChildren(...matches.map((item) => {
+      const link = document.createElement('a');
+      link.href = item.url;
+      const copy = document.createElement('div');
+      const title = document.createElement('strong');
+      const description = document.createElement('p');
+      const date = document.createElement('span');
+      title.textContent = item.title;
+      description.textContent = item.description;
+      date.textContent = item.date;
+      copy.append(title, description);
+      link.append(copy, date);
+      return link;
+    }));
+  };
+  input?.addEventListener('input', render);
+  render();
+</script>

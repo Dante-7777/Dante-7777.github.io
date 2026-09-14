@@ -1,0 +1,18 @@
+---
+import { dateText, postSlug } from '../lib/posts';
+import type { CollectionEntry } from 'astro:content';
+interface Props { posts: CollectionEntry<'posts'>[] }
+const { posts } = Astro.props;
+---
+<div class="post-list">
+  {posts.map((post) => (
+    <article class="post-row">
+      <time datetime={post.data.publishedAt.toISOString()}>{dateText(post.data.publishedAt)}</time>
+      <div>
+        <h2><a href={`/writing/${postSlug(post.id)}/`}>{post.data.title}</a></h2>
+        <p>{post.data.description}</p>
+        <span>{post.data.category} · {post.data.tags.join(' / ')}</span>
+      </div>
+    </article>
+  ))}
+</div>

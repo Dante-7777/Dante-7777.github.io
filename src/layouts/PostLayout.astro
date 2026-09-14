@@ -1,0 +1,18 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { dateText } from '../lib/posts';
+import type { CollectionEntry } from 'astro:content';
+interface Props { post: CollectionEntry<'posts'> }
+const { post } = Astro.props;
+---
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="article">
+    <header class="article-header">
+      <div class="article-meta"><span>{post.data.category}</span><time>{dateText(post.data.publishedAt)}</time></div>
+      <h1>{post.data.title}</h1>
+      <p>{post.data.description}</p>
+    </header>
+    <div class="prose"><slot /></div>
+    <footer class="article-end"><span>— 完 —</span><a href="/writing/">返回全部文章</a></footer>
+  </article>
+</BaseLayout>
