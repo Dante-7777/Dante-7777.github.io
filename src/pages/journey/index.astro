@@ -1,0 +1,229 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { journeyPlaces, journeyStops } from '../../data/journey';
+import 'leaflet/dist/leaflet.css';
+---
+
+<BaseLayout title="行迹" description="以地点、时间与文字记录人生所经之处。">
+  <header class="journey-heading">
+    <div>
+      <p class="eyebrow">行迹 <span lang="ja">旅の記録</span></p>
+      <h1>所经之处，<br />皆有回声。</h1>
+    </div>
+    <p>从平凉出发，让年份带着地图向前走。点击地点，或按下播放，沿时间重访每一站。</p>
+  </header>
+
+  <div class="journey-demo-note"><span>本地草稿</span>按你确认的年份整理；2010 年北京是平凉生活期间的一次旅行。</div>
+
+  <section class="journey-board" aria-label="人生轨迹交互地图" data-journey-board data-places={JSON.stringify(journeyPlaces)} data-stops={JSON.stringify(journeyStops)}>
+    <div class="journey-map">
+      <div class="journey-map-meta"><span>山川有界 · 行旅无疆</span><span>双指缩放 · 拖动地图</span></div>
+      <div id="journey-real-map" class="journey-real-map" aria-label="可缩放的 Akatsuki 人生轨迹地图"></div>
+      <div class="journey-map-wash" aria-hidden="true"></div>
+      <div class="journey-map-title" aria-hidden="true"><b>輿地行跡</b><span>AKATSUKI · JOURNEY</span></div>
+      <div class="journey-legend" aria-label="地图图例"><span><i class="legend-home"></i>生活</span><span><i class="legend-visit"></i>旅行</span><span><b></b>轨迹</span></div>
+      <div class="journey-map-source">地图资料 © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> · 省界 <a href="https://github.com/twobin/china-map-geojson" target="_blank" rel="noopener noreferrer">china-map-geojson</a></div>
+    </div>
+    <div class="journey-playback" aria-label="按时间浏览人生轨迹">
+      <div class="journey-playback-head">
+        <p><span>时光行旅</span><small data-stage-count>01 / {String(journeyStops.length).padStart(2, '0')}</small></p>
+        <div class="journey-playback-current" aria-live="polite">
+          <time data-stage-period>{journeyStops[0].period}</time>
+          <strong data-stage-place>{journeyStops[0].title}</strong>
+          <span data-stage-note>{journeyStops[0].note}</span>
+        </div>
+      </div>
+      <div class="journey-playback-actions">
+        <button type="button" data-stage-prev aria-label="上一站" disabled>←</button>
+        <button class="journey-play-button" type="button" data-stage-play aria-label="播放行迹" aria-pressed="false"><span data-play-label>▶</span></button>
+        <button type="button" data-stage-next aria-label="下一站">→</button>
+      </div>
+      <div class="journey-stage-track" aria-label="选择一个时间节点">
+        {journeyStops.map((stop, index) => (
+          <button type="button" data-stage-index={index} class:list={{ active: index === 0 }} aria-label={`${stop.period}，${stop.title}：${stop.note}`} aria-current={index === 0 ? 'step' : undefined} title={`${stop.period} · ${stop.title}`}>
+            <i aria-hidden="true"></i><span>{stop.period}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import L from 'leaflet';
+  import chinaData from 'china-map-geojson/src/china.js';
+
+  type Place = { id: string; name: string; region: string; coordinates: [number, number]; period: string; role: string; note: string; kind: 'home' | 'stay' | 'visit'; chapters: { period: string; title: string; note: string }[]; articles: string[] };
+  type Stop = { id: string; placeId: string; period: string; title: string; note: string };
+  const board = document.querySelector<HTMLElement>('[data-journey-board]');
+  const places = JSON.parse(board?.dataset.places || '[]') as Place[];
+  const stops = JSON.parse(board?.dataset.stops || '[]') as Stop[];
+  const stageButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-stage-index]')];
+  const previousButton = document.querySelector<HTMLButtonElement>('[data-stage-prev]');
+  const nextButton = document.querySelector<HTMLButtonElement>('[data-stage-next]');
+  const playButton = document.querySelector<HTMLButtonElement>('[data-stage-play]');
+  const playLabel = document.querySelector<HTMLElement>('[data-play-label]');
+  const mapElement = document.querySelector<HTMLElement>('#journey-real-map');
+  const mapMarkers = new Map<string, L.Marker>();
+  let routePast: L.Polyline | undefined;
+  let routeCurrent: L.Polyline | undefined;
+  let routeHead: L.CircleMarker | undefined;
+  let routeCoordinates: L.LatLng[] = [];
+  let routeLegs: L.LatLng[][] = [];
+  let activeStopIndex = 0;
+  let playbackTimer: number | undefined;
+  let routeAnimation: number | undefined;
+  const iconFor = (place: Place, active = false) => L.divIcon({
+    className: 'journey-pin-marker',
+    html: `<span class="map-seal is-${place.kind} pin-${place.id}${active ? ' active' : ''}"><i></i><b>${place.name}</b></span>`,
+    iconSize: [1, 1], iconAnchor: [0, 0],
+  });
+  const curvedLeg = (start: L.LatLng, end: L.LatLng) => {
+    const latitude = (start.lat + end.lat) / 2;
+    const longitudeScale = Math.cos(latitude * Math.PI / 180);
+    const dx = (end.lng - start.lng) * longitudeScale;
+    const dy = end.lat - start.lat;
+    const length = Math.hypot(dx, dy) || 1;
+    const bend = Math.min(length * .13, 1.2);
+    const control = L.latLng(latitude + dx / length * bend, (start.lng + end.lng) / 2 - dy / length / longitudeScale * bend);
+    return Array.from({ length: 25 }, (_, index) => {
+      const t = index / 24;
+      const a = (1 - t) ** 2;
+      const b = 2 * (1 - t) * t;
+      const c = t ** 2;
+      return L.latLng(a * start.lat + b * control.lat + c * end.lat, a * start.lng + b * control.lng + c * end.lng);
+    });
+  };
+  const pausePlayback = () => {
+    if (playbackTimer !== undefined) window.clearInterval(playbackTimer);
+    playbackTimer = undefined;
+    playButton?.setAttribute('aria-pressed', 'false');
+    playButton?.setAttribute('aria-label', '播放行迹');
+    if (playLabel) playLabel.textContent = '▶';
+  };
+  const selectStage = (index: number) => {
+    const stop = stops[index];
+    if (!stop) return;
+    const previousIndex = activeStopIndex;
+    if (routeAnimation !== undefined) window.cancelAnimationFrame(routeAnimation);
+    routeAnimation = undefined;
+    activeStopIndex = index;
+    const count = document.querySelector<HTMLElement>('[data-stage-count]');
+    const period = document.querySelector<HTMLElement>('[data-stage-period]');
+    const placeName = document.querySelector<HTMLElement>('[data-stage-place]');
+    const note = document.querySelector<HTMLElement>('[data-stage-note]');
+    if (count) count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(stops.length).padStart(2, '0')}`;
+    if (period) period.textContent = stop.period;
+    if (placeName) placeName.textContent = stop.title;
+    if (note) note.textContent = stop.note;
+    if (previousButton) previousButton.disabled = index === 0;
+    if (nextButton) nextButton.disabled = index === stops.length - 1;
+    stageButtons.forEach((button, buttonIndex) => {
+      button.classList.toggle('active', buttonIndex === index);
+      button.classList.toggle('passed', buttonIndex < index);
+      if (buttonIndex === index) button.setAttribute('aria-current', 'step');
+      else button.removeAttribute('aria-current');
+    });
+    places.forEach((item) => mapMarkers.get(item.id)?.setIcon(iconFor(item, item.id === stop.placeId)));
+    routePast?.setLatLngs(routeLegs.slice(0, Math.max(0, index - 1)));
+    const animateSegment = index === previousIndex + 1 && window.matchMedia('(prefers-reduced-motion: reduce)').matches === false;
+    if (animateSegment && routeCurrent) {
+      const leg = routeLegs[index - 1];
+      const startTime = performance.now();
+      const draw = (now: number) => {
+        const fraction = Math.min((now - startTime) / 1450, 1);
+        const eased = fraction * fraction * (3 - 2 * fraction);
+        const position = eased * (leg.length - 1);
+        const whole = Math.floor(position);
+        const next = leg[Math.min(whole + 1, leg.length - 1)];
+        const partial = position - whole;
+        const current = L.latLng(leg[whole].lat + (next.lat - leg[whole].lat) * partial, leg[whole].lng + (next.lng - leg[whole].lng) * partial);
+        routeCurrent?.setLatLngs([...leg.slice(0, whole + 1), current]);
+        routeHead?.setLatLng(current);
+        if (fraction < 1) routeAnimation = window.requestAnimationFrame(draw);
+        else routeAnimation = undefined;
+      };
+      routeAnimation = window.requestAnimationFrame(draw);
+    } else {
+      routeCurrent?.setLatLngs(index > 0 ? routeLegs[index - 1] : []);
+      routeHead?.setLatLng(routeCoordinates[index]);
+    }
+  };
+  stageButtons.forEach((button) => button.addEventListener('click', () => {
+    pausePlayback();
+    selectStage(Number(button.dataset.stageIndex));
+  }));
+  previousButton?.addEventListener('click', () => { pausePlayback(); selectStage(activeStopIndex - 1); });
+  nextButton?.addEventListener('click', () => { pausePlayback(); selectStage(activeStopIndex + 1); });
+  playButton?.addEventListener('click', () => {
+    if (playbackTimer !== undefined) { pausePlayback(); return; }
+    if (activeStopIndex >= stops.length - 1) selectStage(0);
+    playButton.setAttribute('aria-pressed', 'true');
+    playButton.setAttribute('aria-label', '暂停行迹');
+    if (playLabel) playLabel.textContent = 'Ⅱ';
+    playbackTimer = window.setInterval(() => {
+      if (activeStopIndex >= stops.length - 1) { pausePlayback(); return; }
+      selectStage(activeStopIndex + 1);
+    }, 2600);
+  });
+
+  if (mapElement && places.length) {
+    const map = L.map(mapElement, { zoomControl: false, scrollWheelZoom: true, touchZoom: true, dragging: true, zoomSnap: .25, zoomDelta: .5, minZoom: 3, maxZoom: 13 });
+    const coordinates = places.map((place) => L.latLng(place.coordinates[1], place.coordinates[0]));
+    routeCoordinates = stops.flatMap((stop) => {
+      const place = places.find((item) => item.id === stop.placeId);
+      return place ? [L.latLng(place.coordinates[1], place.coordinates[0])] : [];
+    });
+    routeLegs = routeCoordinates.slice(1).map((end, index) => curvedLeg(routeCoordinates[index], end));
+    L.control.zoom({ position: 'bottomright', zoomInTitle: '放大', zoomOutTitle: '缩小' }).addTo(map);
+    const tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19, opacity: .12,
+    }).addTo(map);
+    const provinces = L.geoJSON(chinaData as GeoJSON.GeoJsonObject, {
+      style: (feature) => ({
+        color: '#8d7364', weight: 1.5, opacity: .82,
+        fillColor: ['甘肃', '湖南', '北京'].includes(feature?.properties?.name) ? '#d7b5b7' : '#e8dcc8',
+        fillOpacity: .48,
+      }), interactive: false,
+    }).addTo(map);
+    map.fitBounds(L.latLngBounds(coordinates).pad(.3), { padding: [48, 48], maxZoom: 5 });
+    const provinceNames: { marker: L.Marker; visited: boolean }[] = [];
+    for (const feature of chinaData.features) {
+      const center = feature.properties?.cp;
+      const name = feature.properties?.name;
+      if (!Array.isArray(center) || !name) continue;
+      provinceNames.push({
+        visited: ['甘肃', '湖南', '北京'].includes(name),
+        marker: L.marker([center[1], center[0]], {
+          interactive: false,
+          icon: L.divIcon({ className: 'province-name', html: `<span>${name}</span>`, iconSize: [58, 18], iconAnchor: [29, 9] }),
+        }).addTo(map),
+      });
+    }
+    const updateMapDetail = () => {
+      const zoom = map.getZoom();
+      const detailed = zoom >= 6;
+      tiles.setOpacity(detailed ? .82 : .12);
+      provinces.setStyle((feature) => ({
+        color: '#8d7364', weight: detailed ? 0 : 1.5, opacity: detailed ? 0 : .82,
+        fillColor: ['甘肃', '湖南', '北京'].includes(feature?.properties?.name) ? '#d7b5b7' : '#e8dcc8',
+        fillOpacity: detailed ? 0 : .48,
+      }));
+      provinceNames.forEach(({ marker, visited }) => marker.getElement()?.classList.toggle('is-hidden', detailed || (!visited && zoom < 5)));
+    };
+    map.on('zoomend', updateMapDetail);
+    routePast = L.polyline([], { className: 'journey-map-route is-past', color: '#9a6a74', weight: 1.9, opacity: .36, interactive: false }).addTo(map);
+    routeCurrent = L.polyline([], { className: 'journey-map-route is-current', color: '#ad5268', weight: 2.5, opacity: .88, interactive: false }).addTo(map);
+    routeHead = L.circleMarker(routeCoordinates[0], { radius: 5, color: '#fff9ee', weight: 2, fillColor: '#ad5268', fillOpacity: 1, interactive: false }).addTo(map);
+    places.forEach((place) => {
+      const marker = L.marker([place.coordinates[1], place.coordinates[0]], { icon: iconFor(place), title: place.name })
+        .addTo(map)
+        .bindTooltip(`${place.period} · ${place.role}`, { direction: 'top', offset: [0, -16], opacity: .94 });
+      marker.on('click', () => { pausePlayback(); selectStage(stops.findIndex((stop) => stop.placeId === place.id)); });
+      mapMarkers.set(place.id, marker);
+    });
+    updateMapDetail();
+    selectStage(0);
+  }
+</script>
