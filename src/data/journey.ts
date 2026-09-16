@@ -53,6 +53,14 @@ export const journeyPlaces: JourneyPlace[] = [
       { period: '2017—2020', title: '高中三年', note: '从高一开始在兰州读高中。' },
     ], articles: [],
   },
+  {
+    id: 'baoding', name: '保定', region: '河北', coordinates: [115.47, 38.87],
+    period: '2026', role: '旅行',
+    note: '2026 年去河北保定旅行一次。', kind: 'visit',
+    chapters: [
+      { period: '2026', title: '保定之行', note: '去河北保定旅行一次。' },
+    ], articles: [],
+  },
 ];
 
 export const journeyStops: JourneyStop[] = [
@@ -62,4 +70,5 @@ export const journeyStops: JourneyStop[] = [
   { id: 'pingliang-return', placeId: 'pingliang', period: '2016—2017', title: '平凉', note: '从株洲返乡，继续读初中' },
   { id: 'lanzhou-high', placeId: 'lanzhou', period: '2017—2020', title: '兰州', note: '高中三年' },
   { id: 'beijing-university', placeId: 'beijing', period: '2020—2026', title: '北京', note: '大学及之后的北京生活' },
+  { id: 'baoding-visit', placeId: 'baoding', period: '2026', title: '保定', note: '去河北保定旅行一次' },
 ];
