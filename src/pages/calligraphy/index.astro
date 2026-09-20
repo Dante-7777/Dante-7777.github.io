@@ -10,6 +10,19 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p>输入一个汉字，查看历代书家的草书写法。</p>
     </header>
 
+    <section class="daily-poem" data-daily-poem aria-labelledby="daily-poem-title">
+      <div class="daily-poem-index"><span>每日一诗</span><small>DAILY VERSE</small></div>
+      <div class="daily-poem-content">
+        <div class="daily-poem-heading">
+          <p><span data-poem-dynasty>今日</span><span data-poem-author>诗笺</span></p>
+          <h2 id="daily-poem-title" data-poem-title>正在展开今日诗句…</h2>
+        </div>
+        <div class="daily-poem-verse" data-poem-verse aria-live="polite"></div>
+        <button type="button" class="daily-poem-expand" data-poem-expand hidden>展开全文</button>
+      </div>
+      <a class="daily-poem-source" data-poem-source href="https://haitang.app/" target="_blank" rel="noopener noreferrer">海棠诗社 ↗</a>
+    </section>
+
     <div class="calligraphy-board">
       <div class="calligraphy-paper" aria-label="所输入汉字的字帖式预览">
         <span class="calligraphy-paper-label">简繁对照</span>
@@ -54,8 +67,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   const resultGrid = document.querySelector<HTMLElement>('[data-result-grid]');
   const resultCharacter = document.querySelector<HTMLElement>('[data-result-character]');
   const resultStatus = document.querySelector<HTMLElement>('[data-result-status]');
+  const poemTitle = document.querySelector<HTMLElement>('[data-poem-title]');
+  const poemDynasty = document.querySelector<HTMLElement>('[data-poem-dynasty]');
+  const poemAuthor = document.querySelector<HTMLElement>('[data-poem-author]');
+  const poemVerse = document.querySelector<HTMLElement>('[data-poem-verse]');
+  const poemSource = document.querySelector<HTMLAnchorElement>('[data-poem-source]');
+  const poemExpand = document.querySelector<HTMLButtonElement>('[data-poem-expand]');
   const toTraditional = OpenCC.Converter({ from: 'cn', to: 't' });
   const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] || character);
+  const apiOrigin = ['127.0.0.1', 'localhost'].includes(location.hostname)
+    ? 'http://127.0.0.1:8787'
+    : 'https://api.akatsuki.fashion';
+  fetch(`${apiOrigin}/api/daily-poem`)
+    .then(async (response) => {
+      const poem = await response.json();
+      if (!response.ok) throw new Error(poem.error || '今日诗笺暂时无法读取');
+      if (poemTitle) poemTitle.textContent = poem.title;
+      if (poemDynasty) poemDynasty.textContent = `[${poem.dynasty}]`;
+      if (poemAuthor) poemAuthor.textContent = poem.author;
+      if (poemVerse) {
+        poemVerse.textContent = poem.content;
+        if (poem.content.length > 140) {
+          poemVerse.classList.add('is-collapsed');
+          if (poemExpand) poemExpand.hidden = false;
+        }
+      }
+      if (poemSource) poemSource.href = poem.url;
+    })
+    .catch(() => document.querySelector<HTMLElement>('[data-daily-poem]')?.setAttribute('hidden', ''));
+  poemExpand?.addEventListener('click', () => {
+    const collapsed = poemVerse?.classList.toggle('is-collapsed') ?? false;
+    poemExpand.textContent = collapsed ? '展开全文' : '收起';
+  });
   const showCharacter = () => {
     const character = Array.from(input?.value.trim() || '')[0];
     const shownCharacter = character || '晓';
@@ -79,9 +122,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (button) button.disabled = true;
     try {
-      const apiOrigin = ['127.0.0.1', 'localhost'].includes(location.hostname)
-        ? 'http://127.0.0.1:8787'
-        : 'https://api.akatsuki.fashion';
       const endpoint = `${apiOrigin}/api/calligraphy?character=${encodeURIComponent(character)}`;
       const response = await fetch(endpoint);
       const data = await response.json();

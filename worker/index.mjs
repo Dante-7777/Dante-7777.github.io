@@ -1,4 +1,5 @@
 import { lookupCalligraphy } from '../services/calligraphy-api.mjs';
+import { lookupDailyPoem } from '../services/daily-poem-api.mjs';
 
 const allowedOrigins = new Set([
   'https://akatsuki.fashion',
@@ -21,11 +22,13 @@ export default {
     const url = new URL(request.url);
     const headers = responseHeaders(request);
     if (request.method === 'OPTIONS') return new Response(null, { headers });
-    if (request.method !== 'GET' || url.pathname !== '/api/calligraphy') {
+    if (request.method !== 'GET' || !['/api/calligraphy', '/api/daily-poem'].includes(url.pathname)) {
       return Response.json({ error: 'Not found' }, { status: 404, headers });
     }
     try {
-      const result = await lookupCalligraphy(url.searchParams.get('character') || '');
+      const result = url.pathname === '/api/daily-poem'
+        ? await lookupDailyPoem()
+        : await lookupCalligraphy(url.searchParams.get('character') || '');
       return new Response(JSON.stringify(result), { headers });
     } catch (error) {
       return new Response(JSON.stringify({ error: error instanceof Error ? error.message : '查询失败' }), { status: 400, headers });

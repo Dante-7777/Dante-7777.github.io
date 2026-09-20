@@ -189,6 +189,18 @@ footer div { display: flex; gap: 20px; }
 .calligraphy-heading { margin-bottom: 48px; }
 .calligraphy-heading h1 { margin: 0; font-family: var(--font-serif); font-size: clamp(42px, 6vw, 68px); font-weight: 500; line-height: 1.25; letter-spacing: -.035em; }
 .calligraphy-heading > p:last-child { max-width: 34rem; margin: 20px 0 0; color: var(--muted); font-family: var(--font-serif); font-size: 16px; line-height: 1.85; }
+.daily-poem { position: relative; display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: clamp(24px, 5vw, 64px); margin: -10px 0 48px; padding: 32px 4px 34px; border-block: 1px solid var(--line); }
+.daily-poem-index { display: flex; flex-direction: column; gap: 7px; color: var(--accent); font-family: var(--font-serif); letter-spacing: .16em; }
+.daily-poem-index span { font-size: 13px; }
+.daily-poem-index small { color: var(--faint); font: 9px Georgia, serif; letter-spacing: .2em; }
+.daily-poem-content { min-width: 0; }
+.daily-poem-heading { display: flex; align-items: baseline; gap: 22px; margin-bottom: 18px; }
+.daily-poem-heading h2 { margin: 0; font-family: var(--font-serif); font-size: clamp(23px, 3vw, 32px); font-weight: 500; }
+.daily-poem-heading p { order: 2; display: flex; gap: 7px; margin: 0; color: var(--muted); font-family: var(--font-serif); font-size: 12px; }
+.daily-poem-verse { max-width: 43rem; overflow: hidden; white-space: pre-wrap; color: var(--ink); font-family: var(--font-serif); font-size: 15px; line-height: 2; transition: max-height .25s ease; }
+.daily-poem-verse.is-collapsed { max-height: 6em; mask-image: linear-gradient(to bottom, #000 58%, transparent); }
+.daily-poem-expand { margin-top: 12px; padding: 0; border: 0; background: transparent; color: var(--accent); cursor: pointer; font-family: var(--font-serif); font-size: 11px; }
+.daily-poem-source { align-self: end; color: var(--accent); font-size: 11px; text-decoration: none; white-space: nowrap; }
 .calligraphy-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); border: 1px solid var(--line); background: var(--surface); }
 .calligraphy-paper { min-height: 470px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 28px 24px 23px; border-right: 1px solid var(--line); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent-soft) 36%, var(--surface)), var(--surface) 65%); }
 .calligraphy-paper-label { align-self: flex-start; color: var(--accent); font-family: var(--font-serif); font-size: 12px; letter-spacing: .2em; }
@@ -329,6 +341,11 @@ footer div { display: flex; gap: 20px; }
   .archive-list a span { display: none; }
   .search-results > a { grid-template-columns: 1fr; gap: 5px; }
   .calligraphy-heading { margin-bottom: 30px; }
+  .daily-poem { grid-template-columns: 1fr auto; gap: 18px; margin-bottom: 30px; padding: 24px 2px 26px; }
+  .daily-poem-index { grid-column: 1 / -1; }
+  .daily-poem-heading { display: block; }
+  .daily-poem-heading p { margin-top: 7px; }
+  .daily-poem-source { grid-column: 2; }
   .calligraphy-board { grid-template-columns: 1fr; }
   .calligraphy-paper { min-height: 340px; border-right: 0; border-bottom: 1px solid var(--line); }
   .calligraphy-grid { width: min(60%, 210px); }
