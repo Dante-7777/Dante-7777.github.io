@@ -7,7 +7,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     <header class="calligraphy-heading">
       <p class="eyebrow">字帖 <span lang="ja">文字のかたち</span></p>
       <h1>一字一境，<br />落笔有风。</h1>
-      <p>想看一个字的草书写法？写下它，再到书法字典查阅不同书家的字迹。</p>
+      <p>想看一个字的草书写法？写下它，在这里比较不同书家的笔意。</p>
     </header>
 
     <div class="calligraphy-board">
@@ -19,13 +19,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <div class="calligraphy-panel">
         <span class="calligraphy-section-number">01 / 查一字</span>
         <h2>在字间，寻笔意。</h2>
-        <p>输入一个汉字，点击后将在新页面打开书法字典的草书查询结果。本站不保存或转载其字形图片。</p>
-        <form data-calligraphy-form action="https://www.shufazidian.com/s.php" method="post" target="_blank">
+        <p>输入一个汉字，按六位名家分组，择取代表法帖中的草书写法。</p>
+        <form data-calligraphy-form>
           <label for="calligraphy-character">要查的字</label>
           <div class="calligraphy-input-row">
             <input id="calligraphy-character" name="wd" type="text" inputmode="text" autocomplete="off" placeholder="例如：晓" required aria-describedby="calligraphy-error" />
             <input type="hidden" name="sort" value="7" />
-            <button type="submit">查草书 <span aria-hidden="true">↗</span></button>
+            <button type="submit">查草书 <span aria-hidden="true">→</span></button>
           </div>
           <p id="calligraphy-error" class="calligraphy-error" role="alert" hidden>请只输入一个汉字。</p>
         </form>
@@ -33,6 +33,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <p class="calligraphy-source">查询由 <a href="https://www.shufazidian.com/" target="_blank" rel="noopener noreferrer">书法字典 ↗</a> 提供；结果与使用规则以原站为准。</p>
       </div>
     </div>
+    <section class="calligraphy-results" data-calligraphy-results hidden aria-live="polite">
+      <div class="calligraphy-results-head"><div><span>02 / 名家字迹</span><h2><b data-result-character></b>字草书</h2></div><p data-result-status></p></div>
+      <div class="calligraphy-result-grid" data-result-grid></div>
+    </section>
   </div>
 </BaseLayout>
 
@@ -41,18 +45,57 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   const input = document.querySelector<HTMLInputElement>('#calligraphy-character');
   const preview = document.querySelector<HTMLElement>('[data-character-preview]');
   const error = document.querySelector<HTMLElement>('#calligraphy-error');
+  const results = document.querySelector<HTMLElement>('[data-calligraphy-results]');
+  const resultGrid = document.querySelector<HTMLElement>('[data-result-grid]');
+  const resultCharacter = document.querySelector<HTMLElement>('[data-result-character]');
+  const resultStatus = document.querySelector<HTMLElement>('[data-result-status]');
+  const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] || character);
   const showCharacter = () => {
     const character = Array.from(input?.value.trim() || '')[0];
     if (preview) preview.textContent = character || '暁';
     if (error) error.hidden = true;
   };
   input?.addEventListener('input', showCharacter);
-  form?.addEventListener('submit', (event) => {
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
     const character = input?.value.trim() || '';
     if (!/^\p{Script=Han}$/u.test(character)) {
-      event.preventDefault();
       if (error) error.hidden = false;
       input?.focus();
+      return;
+    }
+    if (results) results.hidden = false;
+    if (resultCharacter) resultCharacter.textContent = character;
+    if (resultStatus) resultStatus.textContent = '正在从书法字典择取字形…';
+    if (resultGrid) resultGrid.innerHTML = '';
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (button) button.disabled = true;
+    try {
+      const apiOrigin = ['127.0.0.1', 'localhost'].includes(location.hostname)
+        ? 'http://127.0.0.1:8787'
+        : 'https://api.akatsuki.fashion';
+      const endpoint = `${apiOrigin}/api/calligraphy?character=${encodeURIComponent(character)}`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || '查询失败');
+      const total = data.groups.reduce((sum: number, group: { results: unknown[] }) => sum + group.results.length, 0);
+      if (resultStatus) resultStatus.textContent = data.groups.length ? `${data.groups.length} 位书家 · ${total} 种写法 · 图片来自书法字典` : '暂未找到所选名家的写法';
+      if (resultGrid) resultGrid.innerHTML = data.groups.map((group: { artist: string; results: { image: string; original: string; dynasty: string; work: string; label: string }[] }, index: number) => `
+        <details class="calligraphy-artist-group" ${index === 0 ? 'open' : ''}>
+          <summary><span><b>${escapeHtml(group.artist)}</b><small>${group.results.length} 种写法</small></span><i aria-hidden="true"></i></summary>
+          <div class="calligraphy-result-grid">
+            ${group.results.map((item) => `
+              <article class="calligraphy-result-card">
+                <a href="${escapeHtml(item.original)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.label)}" loading="lazy" referrerpolicy="no-referrer" /></a>
+                <div><strong>${escapeHtml(item.work || '草书字形')}</strong><span>${escapeHtml(item.dynasty)}</span></div>
+              </article>`).join('')}
+          </div>
+        </details>`).join('');
+      results?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (reason) {
+      if (resultStatus) resultStatus.textContent = reason instanceof Error ? reason.message : '查询失败，请稍后再试';
+    } finally {
+      if (button) button.disabled = false;
     }
   });
   document.querySelectorAll<HTMLButtonElement>('[data-example]').forEach((button) => {

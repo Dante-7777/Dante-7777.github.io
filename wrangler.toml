@@ -1,0 +1,8 @@
+name = "akatsuki-calligraphy-api"
+main = "worker/index.mjs"
+compatibility_date = "2026-09-19"
+workers_dev = true
+
+routes = [
+  { pattern = "api.akatsuki.fashion", custom_domain = true }
+]

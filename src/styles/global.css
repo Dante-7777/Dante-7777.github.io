@@ -213,6 +213,32 @@ footer div { display: flex; gap: 20px; }
 .calligraphy-example button { padding: 0; border: 0; background: transparent; color: var(--accent); cursor: pointer; font-family: var(--font-serif); font-size: 16px; }
 .calligraphy-source { margin: auto 0 0; padding-top: 38px; color: var(--faint); font-size: 11px; line-height: 1.7; }
 .calligraphy-source a { color: var(--accent); text-decoration: underline; }
+.calligraphy-results { margin-top: 48px; scroll-margin-top: 24px; }
+.calligraphy-results-head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.calligraphy-results-head span { color: var(--accent); font: 11px Georgia, serif; letter-spacing: .16em; }
+.calligraphy-results-head h2 { margin: 6px 0 0; font-family: var(--font-serif); font-size: 27px; font-weight: 500; }
+.calligraphy-results-head h2 b { color: var(--accent); font-weight: 500; }
+.calligraphy-results-head p { margin: 0; color: var(--faint); font-size: 11px; }
+.calligraphy-results > .calligraphy-result-grid { display: grid; gap: 10px; }
+.calligraphy-artist-group { border-block: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 72%, transparent); }
+.calligraphy-artist-group + .calligraphy-artist-group { margin-top: -1px; }
+.calligraphy-artist-group summary { display: flex; align-items: center; justify-content: space-between; padding: 17px 4px; cursor: pointer; list-style: none; }
+.calligraphy-artist-group summary::-webkit-details-marker { display: none; }
+.calligraphy-artist-group summary span { display: flex; align-items: baseline; gap: 14px; }
+.calligraphy-artist-group summary b { font-family: var(--font-serif); font-size: 20px; font-weight: 500; }
+.calligraphy-artist-group summary small { color: var(--faint); font-size: 11px; }
+.calligraphy-artist-group summary i { position: relative; width: 16px; height: 16px; }
+.calligraphy-artist-group summary i::before, .calligraphy-artist-group summary i::after { content: ''; position: absolute; top: 7px; left: 2px; width: 12px; height: 1px; background: var(--accent); }
+.calligraphy-artist-group summary i::after { transform: rotate(90deg); transition: transform .18s ease; }
+.calligraphy-artist-group[open] summary i::after { transform: rotate(0); }
+.calligraphy-artist-group .calligraphy-result-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 4px 4px 18px; }
+.calligraphy-result-card { border: 1px solid var(--line); background: var(--surface); }
+.calligraphy-result-card > a { min-height: 205px; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle, var(--surface), var(--paper)); }
+.calligraphy-result-card img { display: block; max-width: 100%; max-height: 175px; mix-blend-mode: multiply; }
+:root[data-theme='dark'] .calligraphy-result-card img { mix-blend-mode: normal; }
+.calligraphy-result-card div { display: grid; gap: 2px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.calligraphy-result-card strong { font-family: var(--font-serif); font-size: 15px; font-weight: 600; }
+.calligraphy-result-card span { overflow: hidden; color: var(--faint); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 
 .journey-heading { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; align-items: end; gap: 64px; margin-bottom: 30px; }
 .journey-heading h1 { margin: 0; font-family: var(--font-serif); font-size: clamp(42px, 6vw, 68px); font-weight: 500; line-height: 1.25; letter-spacing: -.035em; }
@@ -307,6 +333,9 @@ footer div { display: flex; gap: 20px; }
   .calligraphy-grid { width: min(60%, 210px); }
   .calligraphy-panel { min-height: 390px; padding: 32px 24px 26px; }
   .calligraphy-panel h2 { margin-top: 20px; }
+  .calligraphy-results-head { align-items: start; flex-direction: column; gap: 8px; }
+  .calligraphy-artist-group .calligraphy-result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calligraphy-result-card > a { min-height: 180px; padding: 16px; }
   .journey-heading { grid-template-columns: 1fr; gap: 18px; }
   .journey-heading h1 { font-size: clamp(40px, 13vw, 54px); }
   .journey-heading > p { font-size: 14px; }

@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "calligraphy:api": "node scripts/calligraphy-proxy.mjs",
     "check": "astro check"
   },
   "dependencies": {

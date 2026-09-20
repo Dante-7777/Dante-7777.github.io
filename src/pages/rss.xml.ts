@@ -9,7 +9,7 @@ export async function GET(context: APIContext) {
   return rss({
     title: site.title,
     description: site.description,
-    site: context.site ?? 'https://dante-7777.github.io',
+    site: context.site ?? 'https://akatsuki.fashion',
     items: posts.map((post) => ({
       title: post.data.title,
       description: post.data.description,

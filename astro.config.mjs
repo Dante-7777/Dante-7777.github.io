@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://dante-7777.github.io',
+  site: 'https://akatsuki.fashion',
   output: 'static',
   trailingSlash: 'always',
   integrations: [sitemap()],
