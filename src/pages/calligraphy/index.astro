@@ -5,21 +5,23 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 <BaseLayout title="字帖" description="输入一个汉字，在书法字典查阅历代草书写法。">
   <div class="calligraphy-page">
     <header class="calligraphy-heading">
-      <p class="eyebrow">字帖 <span lang="ja">文字のかたち</span></p>
-      <h1>一字一境，<br />落笔有风。</h1>
-      <p>想看一个字的草书写法？写下它，在这里比较不同书家的笔意。</p>
+      <p class="eyebrow">字帖 <span>CALLIGRAPHY</span></p>
+      <h1>草书索引</h1>
+      <p>输入一个汉字，查看历代书家的草书写法。</p>
     </header>
 
     <div class="calligraphy-board">
       <div class="calligraphy-paper" aria-label="所输入汉字的字帖式预览">
-        <span class="calligraphy-paper-label">临字 · 草书索引</span>
-        <div class="calligraphy-grid" aria-hidden="true"><span data-character-preview>暁</span></div>
-        <span class="calligraphy-paper-foot">此处仅为普通字体预览，并非草书范字</span>
+        <span class="calligraphy-paper-label">简繁对照</span>
+        <div class="calligraphy-grid" aria-label="所查汉字及其繁体字">
+          <span class="calligraphy-character-variant"><i>简</i><b data-character-preview>晓</b></span>
+          <span class="calligraphy-character-variant"><i>繁</i><b data-character-traditional>曉</b></span>
+        </div>
       </div>
       <div class="calligraphy-panel">
-        <span class="calligraphy-section-number">01 / 查一字</span>
-        <h2>在字间，寻笔意。</h2>
-        <p>输入一个汉字，按六位名家分组，择取代表法帖中的草书写法。</p>
+        <span class="calligraphy-section-number">01 / 单字查询</span>
+        <h2>查一个字</h2>
+        <p>按书家分组展示代表法帖中的草书字形。</p>
         <form data-calligraphy-form>
           <label for="calligraphy-character">要查的字</label>
           <div class="calligraphy-input-row">
@@ -34,25 +36,31 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       </div>
     </div>
     <section class="calligraphy-results" data-calligraphy-results hidden aria-live="polite">
-      <div class="calligraphy-results-head"><div><span>02 / 名家字迹</span><h2><b data-result-character></b>字草书</h2></div><p data-result-status></p></div>
+      <div class="calligraphy-results-head"><div><span>02 / 查询结果</span><h2><b data-result-character></b>字草书</h2></div><p data-result-status></p></div>
       <div class="calligraphy-result-grid" data-result-grid></div>
     </section>
   </div>
 </BaseLayout>
 
 <script>
+  import OpenCC from 'opencc-js/cn2t';
+
   const form = document.querySelector<HTMLFormElement>('[data-calligraphy-form]');
   const input = document.querySelector<HTMLInputElement>('#calligraphy-character');
   const preview = document.querySelector<HTMLElement>('[data-character-preview]');
+  const traditionalPreview = document.querySelector<HTMLElement>('[data-character-traditional]');
   const error = document.querySelector<HTMLElement>('#calligraphy-error');
   const results = document.querySelector<HTMLElement>('[data-calligraphy-results]');
   const resultGrid = document.querySelector<HTMLElement>('[data-result-grid]');
   const resultCharacter = document.querySelector<HTMLElement>('[data-result-character]');
   const resultStatus = document.querySelector<HTMLElement>('[data-result-status]');
+  const toTraditional = OpenCC.Converter({ from: 'cn', to: 't' });
   const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] || character);
   const showCharacter = () => {
     const character = Array.from(input?.value.trim() || '')[0];
-    if (preview) preview.textContent = character || '暁';
+    const shownCharacter = character || '晓';
+    if (preview) preview.textContent = shownCharacter;
+    if (traditionalPreview) traditionalPreview.textContent = toTraditional(shownCharacter);
     if (error) error.hidden = true;
   };
   input?.addEventListener('input', showCharacter);

@@ -7,15 +7,15 @@ import 'leaflet/dist/leaflet.css';
 <BaseLayout title="行迹" description="以地点、时间与文字记录人生所经之处。">
   <header class="journey-heading">
     <div>
-      <p class="eyebrow">行迹 <span lang="ja">旅の記録</span></p>
-      <h1>所经之处，<br />皆有回声。</h1>
+      <p class="eyebrow">行迹 <span>JOURNEY</span></p>
+      <h1>人生行迹</h1>
     </div>
-    <p>从平凉出发，让年份带着地图向前走。点击地点，或按下播放，沿时间重访每一站。</p>
+    <p>按年份浏览走过的城市。</p>
   </header>
 
   <section class="journey-board" aria-label="人生轨迹交互地图" data-journey-board data-places={JSON.stringify(journeyPlaces)} data-stops={JSON.stringify(journeyStops)}>
     <div class="journey-map">
-      <div class="journey-map-meta"><span>山川有界 · 行旅无疆</span><span>双指缩放 · 拖动地图</span></div>
+      <div class="journey-map-meta"><span>中国 · 行迹图</span><span>双指缩放 · 拖动地图</span></div>
       <div id="journey-real-map" class="journey-real-map" aria-label="可缩放的 Akatsuki 人生轨迹地图"></div>
       <div class="journey-map-wash" aria-hidden="true"></div>
       <div class="journey-map-title" aria-hidden="true"><b>輿地行跡</b><span>AKATSUKI · JOURNEY</span></div>
@@ -28,7 +28,6 @@ import 'leaflet/dist/leaflet.css';
         <div class="journey-playback-current" aria-live="polite">
           <time data-stage-period>{journeyStops[0].period}</time>
           <strong data-stage-place>{journeyStops[0].title}</strong>
-          <span data-stage-note>{journeyStops[0].note}</span>
         </div>
       </div>
       <div class="journey-playback-actions">
@@ -38,7 +37,7 @@ import 'leaflet/dist/leaflet.css';
       </div>
       <div class="journey-stage-track" aria-label="选择一个时间节点">
         {journeyStops.map((stop, index) => (
-          <button type="button" data-stage-index={index} class:list={{ active: index === 0 }} aria-label={`${stop.period}，${stop.title}：${stop.note}`} aria-current={index === 0 ? 'step' : undefined} title={`${stop.period} · ${stop.title}`}>
+          <button type="button" data-stage-index={index} class:list={{ active: index === 0 }} aria-label={`${stop.period}，${stop.title}`} aria-current={index === 0 ? 'step' : undefined} title={`${stop.period} · ${stop.title}`}>
             <i aria-hidden="true"></i><span>{stop.period}</span>
           </button>
         ))}
@@ -51,8 +50,8 @@ import 'leaflet/dist/leaflet.css';
   import L from 'leaflet';
   import chinaData from 'china-map-geojson/src/china.js';
 
-  type Place = { id: string; name: string; region: string; coordinates: [number, number]; period: string; role: string; note: string; kind: 'home' | 'stay' | 'visit'; chapters: { period: string; title: string; note: string }[]; articles: string[] };
-  type Stop = { id: string; placeId: string; period: string; title: string; note: string };
+  type Place = { id: string; name: string; region: string; coordinates: [number, number]; period: string; kind: 'home' | 'stay' | 'visit'; articles: string[] };
+  type Stop = { id: string; placeId: string; period: string; title: string };
   const board = document.querySelector<HTMLElement>('[data-journey-board]');
   const places = JSON.parse(board?.dataset.places || '[]') as Place[];
   const stops = JSON.parse(board?.dataset.stops || '[]') as Stop[];
@@ -110,11 +109,9 @@ import 'leaflet/dist/leaflet.css';
     const count = document.querySelector<HTMLElement>('[data-stage-count]');
     const period = document.querySelector<HTMLElement>('[data-stage-period]');
     const placeName = document.querySelector<HTMLElement>('[data-stage-place]');
-    const note = document.querySelector<HTMLElement>('[data-stage-note]');
     if (count) count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(stops.length).padStart(2, '0')}`;
     if (period) period.textContent = stop.period;
     if (placeName) placeName.textContent = stop.title;
-    if (note) note.textContent = stop.note;
     if (previousButton) previousButton.disabled = index === 0;
     if (nextButton) nextButton.disabled = index === stops.length - 1;
     stageButtons.forEach((button, buttonIndex) => {
@@ -218,7 +215,7 @@ import 'leaflet/dist/leaflet.css';
     places.forEach((place) => {
       const marker = L.marker([place.coordinates[1], place.coordinates[0]], { icon: iconFor(place), title: place.name })
         .addTo(map)
-        .bindTooltip(`${place.period} · ${place.role}`, { direction: 'top', offset: [0, -16], opacity: .94 });
+        .bindTooltip(place.period, { direction: 'top', offset: [0, -16], opacity: .94 });
       marker.on('click', () => { pausePlayback(); selectStage(stops.findIndex((stop) => stop.placeId === place.id)); });
       mapMarkers.set(place.id, marker);
     });
